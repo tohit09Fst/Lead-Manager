@@ -2,7 +2,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import app from '../server.js';
+import app from '../src/app.js';
 import User from '../src/models/User.js';
 import Lead from '../src/models/Lead.js';
 
@@ -27,6 +27,7 @@ describe('Full Stack Lead Manager API Test Suite', () => {
     await User.deleteMany({ email: { $in: ['test.user.a@test.com', 'test.user.b@test.com'] } });
     await Lead.deleteMany({ email: 'test.lead@example.com' });
     serverInstance.close();
+    await mongoose.connection.close();
   });
 
   test('1. Health check returns 200 OK', async () => {
