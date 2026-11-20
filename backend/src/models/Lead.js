@@ -21,6 +21,11 @@ const phoneRegex = /^[0-9+\s\-().]{7,20}$/;
 
 const leadSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
     name: {
       type: String,
       required: [true, 'Name is required'],
@@ -72,10 +77,10 @@ const leadSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for fast searching and filtering
-leadSchema.index({ name: 'text' });
-leadSchema.index({ status: 1 });
-leadSchema.index({ createdAt: -1 });
+// Indexes for fast searching, filtering, and user isolation
+leadSchema.index({ user: 1, name: 1 });
+leadSchema.index({ user: 1, status: 1 });
+leadSchema.index({ user: 1, createdAt: -1 });
 
 const Lead = mongoose.model('Lead', leadSchema);
 
