@@ -1,8 +1,8 @@
 # Lead Manager
 
-A lightweight, production-grade full-stack web application designed for sales representatives and teams to capture, organize, and track prospective leads across different pipeline stages.
+A full-stack, production-grade web application designed for sales representatives and teams to capture, organize, and track prospective leads across different pipeline stages.
 
-Built as part of the Full Stack Developer screening assignment for **Meru Technosoft Pvt. Ltd.**
+Built for the Full Stack Developer screening assignment at **Meru Technosoft Pvt. Ltd.**
 
 ---
 
@@ -10,17 +10,19 @@ Built as part of the Full Stack Developer screening assignment for **Meru Techno
 
 | Area | Technology | Reason for Selection |
 | :--- | :--- | :--- |
-| **Frontend** | **React 18** (Vite) | High rendering performance, fast development cycles, modular component architecture, and minimal build overhead. |
+| **Frontend** | **React 18** (Vite) | High rendering performance, modular component architecture, and minimal build overhead. |
 | **Backend** | **Node.js** with **Express.js** | Lightweight, event-driven REST API, well-suited for high-throughput JSON workloads and asynchronous I/O. |
-| **Database** | **MongoDB** with **Mongoose** | Flexible document schema model fitting evolving customer/lead attributes; powerful validation, casting, indexing, and text search. |
-| **Icons & Styling** | **Lucide Icons** & Modern Responsive CSS | Clean, accessible design system with responsive layouts, CSS custom properties, smooth transitions, and distinct status color-coding. |
-| **Zero-Config DB Fallback** | `mongodb-memory-server` | Ensures instant out-of-the box evaluation without requiring an external MongoDB service to be pre-configured. |
+| **Database** | **MongoDB** with **Mongoose** | Flexible document schema model; powerful validation, casting, indexing, text search, and aggregation pipelines. |
+| **Authentication** | **JWT** & **bcryptjs** | Stateless Bearer token authorization and salted password hashing ensuring complete multi-tenant user isolation. |
+| **Icons & Styling** | **Lucide Icons** & Responsive CSS | Accessible design system with custom CSS properties, responsive tables, animations, and color-coded status badges. |
+| **Testing** | **Node.js Test Runner** (`node:test`) | Native, zero-dependency, lightning-fast integration test suite validating REST APIs and data security. |
+| **Zero-Config DB Fallback** | `mongodb-memory-server` | Ensures instant out-of-the-box local evaluation even if an external MongoDB instance is not configured. |
 
 ---
 
 ## 📁 Project Structure
 
-The project strictly separates concerns with dedicated `frontend/` and `backend/` directories:
+The project strictly separates concerns into dedicated `frontend/` and `backend/` directories:
 
 ```text
 Lead Manager/
@@ -29,83 +31,89 @@ Lead Manager/
 │   │   ├── config/
 │   │   │   └── db.js            # MongoDB connection (with automatic in-memory fallback)
 │   │   ├── controllers/
-│   │   │   └── leadController.js# Business logic (CRUD, query filtering, error handling)
+│   │   │   ├── authController.js# Registration, login, and user profiles
+│   │   │   └── leadController.js# CRUD, search, status filter, pagination & sorting
 │   │   ├── middleware/
-│   │   │   └── errorHandler.js  # Validation, CastError, and 404/500 middleware
+│   │   │   ├── authMiddleware.js# JWT Bearer token authentication & route protection
+│   │   │   └── errorHandler.js  # Validation, CastError, and 404/500 error handler
 │   │   ├── models/
-│   │   │   └── Lead.js          # Mongoose schema, validation rules, and indexes
+│   │   │   ├── User.js          # User schema with bcrypt password hashing
+│   │   │   └── Lead.js          # Lead schema with user ref, validators & indexes
 │   │   ├── routes/
-│   │   │   └── leadRoutes.js    # Clean REST API endpoints
-│   │   └── seed.js              # Standalone database seed script
-│   ├── .env.example             # Example environment configuration
-│   ├── .env                     # Local environment variables (PORT, MONGODB_URI)
-│   ├── package.json             # Backend dependencies and scripts
+│   │   │   ├── authRoutes.js    # /api/auth (register, login, me)
+│   │   │   └── leadRoutes.js    # /api/leads protected REST endpoints
+│   │   └── seed.js              # Database seed script for demo user & sample leads
+│   ├── tests/
+│   │   └── lead.test.js         # Automated end-to-end API test suite
+│   ├── .env.example             # Example configuration file
+│   ├── .env                     # Local environment variables (PORT, MONGODB_URI, JWT_SECRET)
+│   ├── package.json             # Express, Mongoose, JWT, bcryptjs, tests
 │   └── server.js                # Express entry point & auto-initialization
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Header.jsx       # Branding header with primary "Add Lead" trigger
-│   │   │   ├── SearchBar.jsx    # Real-time search & status filter pills
-│   │   │   ├── LeadTable.jsx    # Leads table with status badges and actions
-│   │   │   ├── LeadModal.jsx    # Modal dialog for Add & Edit operations
-│   │   │   ├── DeleteModal.jsx  # Confirmation step before permanent deletion
-│   │   │   └── Notification.jsx # Feedback toasts for success and error states
+│   │   │   ├── Header.jsx           # App branding, user profile badge, Sign Out
+│   │   │   ├── DashboardMetrics.jsx # Status metric breakdown cards (click to filter)
+│   │   │   ├── SearchBar.jsx        # Real-time search bar & status filter pills
+│   │   │   ├── LeadTable.jsx        # Sortable leads table with pagination controls
+│   │   │   ├── LeadModal.jsx        # Add & Edit modal with field validation
+│   │   │   ├── DeleteModal.jsx      # Confirmation modal before deletion
+│   │   │   ├── AuthModal.jsx        # Sign In / Sign Up modal + 1-Click Demo Login
+│   │   │   └── Notification.jsx     # Success and error toast alerts
 │   │   ├── services/
-│   │   │   └── leadService.js   # Encapsulated API client
-│   │   ├── App.jsx              # Main application coordinator state
-│   │   ├── index.css            # Polished design system and responsive CSS
-│   │   └── main.jsx             # React DOM mounting
-│   ├── index.html               # HTML entry point with Inter typography
-│   ├── package.json             # Frontend dependencies and scripts
-│   └── vite.config.js           # Vite dev server configuration & API proxy
+│   │   │   ├── authService.js       # Client authentication API calls
+│   │   │   └── leadService.js       # Client lead CRUD and filtering API calls
+│   │   ├── App.jsx                  # Main application coordinator state
+│   │   ├── index.css                # Polished design system and responsive CSS
+│   │   └── main.jsx                 # React DOM entry point
+│   ├── index.html                   # HTML template with Inter typography
+│   ├── package.json                 # React 18, Vite, Lucide Icons
+│   └── vite.config.js               # Vite config & API reverse proxy
 │
-├── package.json                 # Root convenience scripts
-├── .gitignore                   # Ignored files (node_modules, .env, dist, etc.)
-└── README.md                    # Project documentation
+├── package.json                     # Root scripts for running backend & frontend
+├── .gitignore                       # Git ignore rules
+└── README.md                        # Documentation
 ```
 
 ---
 
-## ✨ Core Features Implemented
+## ✨ Features
 
-1. **Add a Lead**:
-   - Captures `Name`, `Email`, `Phone`, `Company`, `Source` (Dropdown: Website, Referral, Cold Call, LinkedIn, Email Campaign, Other), and `Status` (Dropdown: New, Contacted, Qualified, Lost).
-2. **List Leads**:
-   - Clear tabular presentation with colored badges for each pipeline status (`New`, `Contacted`, `Qualified`, `Lost`), clickable email/phone shortcuts, and formatted creation timestamps.
-3. **Edit a Lead**:
-   - Modals pre-populate existing lead details allowing seamless updating of contact information and pipeline progression.
-4. **Delete a Lead (with confirmation)**:
-   - Dedicated confirmation modal requiring user intent before deleting, preventing accidental data loss.
-5. **Search & Filter**:
-   - Instant search across lead names, emails, and company names.
-   - Interactive status filter pills (`All`, `New`, `Contacted`, `Qualified`, `Lost`) with dynamic result count.
-6. **Robust Validation (Frontend & Backend)**:
-   - Frontend: Real-time validation on change/blur and submission, inline visual alerts, and red input border highlights.
-   - Backend: Mongoose schema and controller-level format verification (regex for email and phone, min/max lengths, required fields, and enum enforcement).
+### 🌟 Core Requirements
+1. **Add a Lead**: Captures `Name`, `Email`, `Phone`, `Company`, `Source` (Dropdown: Website, Referral, Cold Call, LinkedIn, Email Campaign, Other), and `Status` (*New, Contacted, Qualified, Lost*).
+2. **List Leads**: Clear tabular presentation with colored badges for each pipeline status, clickable contact shortcuts, and formatted timestamps.
+3. **Edit a Lead**: Pre-populates lead details in a modal, allowing updates to contact details and pipeline status.
+4. **Delete a Lead (with confirmation)**: Dedicated confirmation modal displays lead details and requires user confirmation before permanent deletion.
+5. **Search & Filter**: Real-time search by lead name, email, or company, plus interactive status filter pills (`All`, `New`, `Contacted`, `Qualified`, `Lost`).
+6. **Dual-Layer Input Validation**: Client-side feedback on change/blur and submission, paired with Mongoose schema and regex checks on the backend.
+
+### 🎁 Implemented Bonus Features
+1. **User Authentication (Signup / Login with JWT)**:
+   - Secure registration and login with bcrypt-hashed passwords and signed JWT tokens.
+   - **Multi-Tenant User Isolation**: Users see, edit, and delete only their own leads.
+   - Includes a **1-Click Quick Demo Login** button for reviewer convenience.
+2. **Table Pagination & Column Sorting**:
+   - Column sorting by clicking headers (*Name & Company, Source, Status, Creation Date*) with dynamic direction arrows.
+   - Pagination controls with configurable rows per page (*5, 10, 20*) and page navigation (*Prev, Page X of Y, Next*).
+3. **Dashboard Status Metrics**:
+   - Live breakdown metric cards: *Total Leads*, *New*, *Contacted*, *Qualified*, and *Lost*.
+   - Clicking any metric card instantly filters the table to that status.
+4. **Automated API Test Suite**:
+   - 9 automated test scenarios covering registration, login, validation errors, protected routes, CRUD lifecycle, sorting, pagination, and multi-user isolation.
 
 ---
 
 ## 🛠️ Setup & Running Locally
 
 ### Prerequisites
-- **Node.js** (v18 or higher recommended; developed on Node v22)
+- **Node.js** (v18 or higher; tested on Node v22)
 - **npm** (v9 or higher)
-- *(Optional)* A running MongoDB instance or MongoDB Atlas URI. **If no MongoDB server is running, the app automatically boots an embedded in-memory MongoDB server without needing manual setup.**
+- *(Optional)* A running MongoDB instance or MongoDB Atlas URI. If none is reachable, the backend automatically uses an embedded in-memory MongoDB fallback.
 
 ---
 
-### Step 1: Clone the repository
-```bash
-git clone <repository-url>
-cd "Lead Manager"
-```
-
----
-
-### Step 2: Install dependencies
-
-You can install dependencies for both `backend` and `frontend`:
+### Step 1: Install Dependencies
 
 ```bash
 # In backend
@@ -122,35 +130,44 @@ cd ..
 
 ---
 
-### Step 3: Configure Environment Variables
+### Step 2: Configure Environment Variables
 
-The backend has a `.env.example` pre-configured. By default, `backend/.env` is configured as follows:
+The backend has a `.env.example` pre-configured. Ensure `backend/.env` contains:
 
 ```env
 PORT=5001
-MONGODB_URI=mongodb://127.0.0.1:27017/lead_manager
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/lead_manager
+JWT_SECRET=lead_manager_super_secret_jwt_key_2026
 ```
 
-> **Note**: If `127.0.0.1:27017` is not running, the application gracefully launches an in-memory MongoDB instance automatically, so you can test it immediately without installing MongoDB!
+---
+
+### Step 3: Seed Sample Data (Optional)
+
+```bash
+cd backend
+npm run seed
+```
+> Seeds a demo user (`demo@merutechno.com` / `password123`) with 7 sample leads across all pipeline stages.
 
 ---
 
 ### Step 4: Run the Application
 
-#### Option A: Running separately (Recommended for development)
+#### Option A: Running separately (Recommended)
 
 **Terminal 1 — Backend:**
 ```bash
 cd backend
 npm run dev
-# Server will run on http://localhost:5001
+# Backend API will run on http://localhost:5001
 ```
 
 **Terminal 2 — Frontend:**
 ```bash
 cd frontend
 npm run dev
-# App will open at http://localhost:3000
+# Frontend web app will open at http://localhost:3000
 ```
 
 #### Option B: From the root directory
@@ -164,48 +181,64 @@ npm run dev:frontend
 
 ---
 
+### Step 5: Run Automated API Tests
+
+To run the automated test suite:
+
+```bash
+cd backend
+npm test
+```
+
+Expected output:
+```text
+▶ Full Stack Lead Manager API Test Suite
+  ✔ 1. Health check returns 200 OK
+  ✔ 2. User Registration & Validation
+  ✔ 3. User Login
+  ✔ 4. Protected Routes Reject Unauthorized Requests
+  ✔ 5. Lead Creation and Input Validation
+  ✔ 6. Pagination, Sorting & Metrics Count
+  ✔ 7. Multi-User Isolation (User B cannot see or delete User A leads)
+  ✔ 8. Update Lead Status
+  ✔ 9. Delete Lead with Confirmation Step endpoint
+✔ Full Stack Lead Manager API Test Suite (9 passing)
+```
+
+---
+
 ## 📡 REST API Reference
 
-| Method | Endpoint | Description | Query Parameters |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/health` | Service health status | — |
-| `GET` | `/api/leads` | Retrieve all leads | `?search=term&status=Qualified` |
-| `GET` | `/api/leads/:id` | Retrieve single lead by ID | — |
-| `POST` | `/api/leads` | Create a new lead | — |
-| `PUT` | `/api/leads/:id` | Update existing lead details/status | — |
-| `DELETE`| `/api/leads/:id` | Delete a lead | — |
-
-### Sample Payload (`POST /api/leads`)
-```json
-{
-  "name": "Alex Mercer",
-  "email": "alex.mercer@gentek.org",
-  "phone": "+1 555-019-9922",
-  "company": "Gentek Corp",
-  "source": "Referral",
-  "status": "New"
-}
-```
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/health` | Service health status | No |
+| `POST` | `/api/auth/register` | Register new user account | No |
+| `POST` | `/api/auth/login` | Authenticate and obtain JWT | No |
+| `GET` | `/api/auth/me` | Fetch currently logged-in user profile | Yes |
+| `GET` | `/api/leads` | List leads (with pagination, sort, search, status filter) | Yes |
+| `GET` | `/api/leads/:id` | Get single lead by ID | Yes |
+| `POST` | `/api/leads` | Create a new lead | Yes |
+| `PUT` | `/api/leads/:id` | Update lead details / status | Yes |
+| `DELETE`| `/api/leads/:id` | Delete a lead | Yes |
 
 ---
 
 ## 🧠 Assumptions Made
 
-1. **Lead Identifier**: Each lead is uniquely identified by MongoDB's `_id`. Emails can be duplicate across different contacts if multiple people share a general domain, but are normalized to lowercase.
-2. **Single Tenant Focus**: As requested, bonus multi-user authentication is intentionally omitted to keep the core pipeline workflow focused, reliable, and clean.
-3. **Resilient Local Database**: Added transparent fallback to `mongodb-memory-server` so anyone reviewing the project on any computer can run `npm run dev` and immediately evaluate a 100% working application without needing Docker or a local MongoDB service running.
+1. **User Scoping**: In a commercial CRM, each sales representative should only have visibility and editing rights over their assigned leads. All query, update, and delete operations strictly verify ownership via `req.user._id`.
+2. **Reviewer Convenience**: Added a 1-click **"One-Click Login as Demo User"** button in the authentication modal so evaluators can inspect the full application immediately without registering a new email manually.
+3. **Resilient Local Database**: Integrated an automatic in-memory MongoDB fallback in `db.js` so anyone reviewing the project on any computer can test it out of the box even without pre-configuring MongoDB.
 
 ---
 
 ## 🔮 What I Would Improve With More Time
 
-1. **User Authentication & Role-Based Access (RBAC)**: JWT-based authentication with bcrypt password hashing allowing sales reps to manage their private pipelines and sales managers to review team performance.
-2. **Activity Timeline & Notes**: A timeline tab on each lead modal to log call summaries, emails sent, and scheduled follow-up dates.
-3. **CSV Export / Import**: Bulk lead import wizard with column mapping and export to Excel/CSV for sales reporting.
-4. **End-to-End Automated Testing**: Playwright or Cypress test suites integrated into GitHub Actions CI pipeline.
+1. **Activity Timeline & Notes**: A timeline tab on each lead modal to log notes from phone calls, emails sent, and scheduled follow-up reminders.
+2. **CSV Bulk Import & Export**: Allow sales reps to export filtered leads into CSV/Excel or import prospect lists via spreadsheet upload.
+3. **End-to-End Browser Tests**: Playwright automated UI tests verifying modal flows and responsive layouts in a CI/CD GitHub Action.
 
 ---
 
 ## 💬 A Note on the Build
 
-> *“What I'm most satisfied with in this solution is the balance between strict core feature completeness and user experience — having zero-friction setup via the resilient database fallback, paired with instant feedback through client/server validation, status pill filtering, and a confirmation modal for destructive actions.”*
+> *“What I'm most satisfied with in this solution is how naturally the bonus features (JWT multi-user isolation, pagination, sorting, status metrics, and automated tests) build upon the solid core architecture without adding bloat or fragile complexity.”*
