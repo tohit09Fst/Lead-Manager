@@ -1,0 +1,23 @@
+{
+  "name": "lead-manager",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack Lead Manager application built with React, Node.js (Express), and MongoDB",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "seed": "cd backend && npm run seed"
+  },
+  "keywords": [
+    "lead-manager",
+    "react",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC"
+}
