@@ -222,23 +222,3 @@ Expected output:
 | `DELETE`| `/api/leads/:id` | Delete a lead | Yes |
 
 ---
-
-## 🧠 Assumptions Made
-
-1. **User Scoping**: In a commercial CRM, each sales representative should only have visibility and editing rights over their assigned leads. All query, update, and delete operations strictly verify ownership via `req.user._id`.
-2. **Reviewer Convenience**: Added a 1-click **"One-Click Login as Demo User"** button in the authentication modal so evaluators can inspect the full application immediately without registering a new email manually.
-3. **Resilient Local Database**: Integrated an automatic in-memory MongoDB fallback in `db.js` so anyone reviewing the project on any computer can test it out of the box even without pre-configuring MongoDB.
-
----
-
-## 🔮 What I Would Improve With More Time
-
-1. **Activity Timeline & Notes**: A timeline tab on each lead modal to log notes from phone calls, emails sent, and scheduled follow-up reminders.
-2. **CSV Bulk Import & Export**: Allow sales reps to export filtered leads into CSV/Excel or import prospect lists via spreadsheet upload.
-3. **End-to-End Browser Tests**: Playwright automated UI tests verifying modal flows and responsive layouts in a CI/CD GitHub Action.
-
----
-
-## 💬 A Note on the Build
-
-> *“What I'm most satisfied with in this solution is how naturally the bonus features (JWT multi-user isolation, pagination, sorting, status metrics, and automated tests) build upon the solid core architecture without adding bloat or fragile complexity.”*
