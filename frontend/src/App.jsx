@@ -152,7 +152,8 @@ export function App() {
     localStorage.setItem('lead_token', data.token);
     localStorage.setItem('lead_user', JSON.stringify(data));
     setUser(data);
-    showNotification(`Welcome back, ${data.name}!`);
+    setIsAuthModalOpen(false);
+    showNotification(`Welcome, ${data.name}!`);
   };
 
   const handleLogout = () => {
@@ -318,7 +319,7 @@ export function App() {
 
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => user && setIsAuthModalOpen(false)}
+        onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
       />
 

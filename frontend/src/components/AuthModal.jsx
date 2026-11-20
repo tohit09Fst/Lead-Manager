@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, UserPlus, Mail, Lock, User, AlertCircle, Sparkles } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User, AlertCircle, Sparkles, X } from 'lucide-react';
 import * as authService from '../services/authService';
 
 const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
@@ -65,6 +65,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
       } else {
         data = await authService.register(formData.name, formData.email, formData.password);
       }
+      // On successful signup or login: close form and log in
       onAuthSuccess(data);
       onClose();
     } catch (err) {
@@ -79,8 +80,19 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
   };
 
   return (
-    <div className="modal-backdrop">
+    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content modal-content-sm auth-modal" onClick={(e) => e.stopPropagation()}>
+        {/* Cancel / Close button in top-right */}
+        <button
+          type="button"
+          className="modal-close-btn auth-close-btn"
+          onClick={onClose}
+          aria-label="Close modal"
+          title="Cancel and close"
+        >
+          <X size={20} />
+        </button>
+
         <div className="auth-header">
           <div className="auth-icon-badge">
             {isLogin ? <LogIn size={24} /> : <UserPlus size={24} />}
@@ -139,6 +151,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
                     value={formData.name}
                     onChange={handleChange}
                     className={`form-input ${errors.name ? 'is-invalid' : ''}`}
+                    autoFocus
                   />
                 </div>
                 {errors.name && (
@@ -184,7 +197,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
                   id="auth-password"
                   name="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="•••••••• (min 6 characters)"
                   value={formData.password}
                   onChange={handleChange}
                   className={`form-input ${errors.password ? 'is-invalid' : ''}`}
@@ -200,22 +213,32 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
           </div>
 
           <div className="auth-footer">
-            <button
-              type="submit"
-              className="btn btn-primary btn-block"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="btn-spinner"></div>
-                  <span>{isLogin ? 'Signing In...' : 'Creating Account...'}</span>
-                </>
-              ) : isLogin ? (
-                'Sign In'
-              ) : (
-                'Create Account'
-              )}
-            </button>
+            <div className="auth-footer-buttons">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="btn-spinner"></div>
+                    <span>{isLogin ? 'Signing In...' : 'Creating Account...'}</span>
+                  </>
+                ) : isLogin ? (
+                  'Sign In'
+                ) : (
+                  'Create Account'
+                )}
+              </button>
+            </div>
 
             <div className="auth-switch">
               {isLogin ? (
