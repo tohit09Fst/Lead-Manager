@@ -1,4 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const getBaseUrl = () => {
+  let url = (import.meta.env.VITE_API_URL || '/api').trim();
+  url = url.replace(/\/+$/, '');
+  if (!url.endsWith('/api') && url.startsWith('http')) {
+    url = `${url}/api`;
+  }
+  return url;
+};
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('lead_token');
@@ -27,7 +34,8 @@ export const getLeads = async ({
   if (sortBy) params.append('sortBy', sortBy);
   if (sortOrder) params.append('sortOrder', sortOrder);
 
-  const url = `${API_BASE_URL}/leads?${params.toString()}`;
+  const baseUrl = getBaseUrl();
+  const url = `${baseUrl}/leads?${params.toString()}`;
   const response = await fetch(url, {
     headers: getAuthHeaders()
   });
@@ -47,7 +55,8 @@ export const getLeads = async ({
  * Fetch single lead by ID
  */
 export const getLeadById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/leads/${id}`, {
     headers: getAuthHeaders()
   });
   const data = await response.json();
@@ -63,7 +72,8 @@ export const getLeadById = async (id) => {
  * Create a new lead
  */
 export const createLead = async (leadData) => {
-  const response = await fetch(`${API_BASE_URL}/leads`, {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/leads`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(leadData)
@@ -84,7 +94,8 @@ export const createLead = async (leadData) => {
  * Update an existing lead
  */
 export const updateLead = async (id, leadData) => {
-  const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/leads/${id}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(leadData)
@@ -105,7 +116,8 @@ export const updateLead = async (id, leadData) => {
  * Delete a lead by ID
  */
 export const deleteLead = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/leads/${id}`, {
     method: 'DELETE',
     headers: getAuthHeaders()
   });

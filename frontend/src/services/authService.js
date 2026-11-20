@@ -1,7 +1,15 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const getBaseUrl = () => {
+  let url = (import.meta.env.VITE_API_URL || '/api').trim();
+  url = url.replace(/\/+$/, '');
+  if (!url.endsWith('/api') && url.startsWith('http')) {
+    url = `${url}/api`;
+  }
+  return url;
+};
 
 export const register = async (name, email, password) => {
-  const res = await fetch(`${API_BASE_URL}/auth/register`, {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password })
@@ -17,7 +25,8 @@ export const register = async (name, email, password) => {
 };
 
 export const login = async (email, password) => {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -33,7 +42,8 @@ export const login = async (email, password) => {
 };
 
 export const getMe = async (token) => {
-  const res = await fetch(`${API_BASE_URL}/auth/me`, {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
