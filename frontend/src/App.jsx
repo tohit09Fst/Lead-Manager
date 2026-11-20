@@ -280,7 +280,7 @@ export function App() {
               searchTerm={searchTerm}
               onSearchChange={handleSearchChange}
               statusFilter={statusFilter}
-              onStatusChange={handleStatusChange}
+              onClearStatus={() => handleStatusChange('All')}
               totalCount={metrics.total}
               filteredCount={pagination.total}
             />

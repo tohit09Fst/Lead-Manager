@@ -1,16 +1,16 @@
 import React from 'react';
 import { Search, X, Filter } from 'lucide-react';
 
-const STATUS_OPTIONS = ['All', 'New', 'Contacted', 'Qualified', 'Lost'];
-
 const SearchBar = ({
   searchTerm,
   onSearchChange,
   statusFilter,
-  onStatusChange,
+  onClearStatus,
   totalCount,
   filteredCount
 }) => {
+  const isFiltered = statusFilter && statusFilter !== 'All';
+
   return (
     <div className="search-filter-card">
       <div className="search-input-wrapper">
@@ -35,27 +35,25 @@ const SearchBar = ({
         )}
       </div>
 
-      <div className="filter-group">
-        <div className="filter-label">
-          <Filter size={16} />
-          <span>Status:</span>
-        </div>
-        <div className="status-pills">
-          {STATUS_OPTIONS.map((status) => (
+      <div className="search-meta-group">
+        {isFiltered && (
+          <div className="active-filter-badge">
+            <Filter size={14} />
+            <span>Filter: <strong>{statusFilter}</strong></span>
             <button
-              key={status}
               type="button"
-              className={`status-pill ${statusFilter === status ? 'active' : ''} ${status.toLowerCase()}`}
-              onClick={() => onStatusChange(status)}
+              className="clear-filter-mini"
+              onClick={onClearStatus}
+              title="Remove status filter"
             >
-              {status}
+              <X size={12} />
             </button>
-          ))}
-        </div>
-      </div>
+          </div>
+        )}
 
-      <div className="results-counter">
-        Showing <strong>{filteredCount}</strong> of {totalCount} leads
+        <div className="results-counter">
+          Showing <strong>{filteredCount}</strong> of {totalCount} leads
+        </div>
       </div>
     </div>
   );
