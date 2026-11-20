@@ -1,5 +1,18 @@
 import React from 'react';
-import { Edit2, Trash2, Mail, Phone, Building, Calendar, Inbox } from 'lucide-react';
+import {
+  Edit2,
+  Trash2,
+  Mail,
+  Phone,
+  Building,
+  Calendar,
+  Inbox,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 
 const STATUS_BADGE_CLASSES = {
   New: 'badge-new',
@@ -21,10 +34,27 @@ const formatDate = (dateString) => {
 const LeadTable = ({
   leads,
   isLoading,
+  pagination,
+  onPageChange,
+  onLimitChange,
+  sortBy,
+  sortOrder,
+  onSortChange,
   onEditLead,
   onDeleteLead,
   onOpenAddModal
 }) => {
+  const renderSortIndicator = (field) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown size={14} className="sort-icon-neutral" />;
+    }
+    return sortOrder === 'asc' ? (
+      <ArrowUp size={14} className="sort-icon-active" />
+    ) : (
+      <ArrowDown size={14} className="sort-icon-active" />
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="table-card">
@@ -45,7 +75,7 @@ const LeadTable = ({
           </div>
           <h3 className="empty-state-title">No leads found</h3>
           <p className="empty-state-text">
-            No leads match your current search and filter criteria, or no leads have been added yet.
+            No leads match your current search or filter criteria. Create a new lead to populate your pipeline.
           </p>
           <button className="btn btn-primary" onClick={onOpenAddModal}>
             Add Your First Lead
@@ -61,11 +91,47 @@ const LeadTable = ({
         <table className="leads-table">
           <thead>
             <tr>
-              <th>Lead Name & Company</th>
+              <th
+                className="sortable-header"
+                onClick={() => onSortChange('name')}
+                title="Sort by Name"
+              >
+                <div className="th-content">
+                  <span>Lead Name & Company</span>
+                  {renderSortIndicator('name')}
+                </div>
+              </th>
               <th>Contact Info</th>
-              <th>Source</th>
-              <th>Status</th>
-              <th>Created Date</th>
+              <th
+                className="sortable-header"
+                onClick={() => onSortChange('source')}
+                title="Sort by Source"
+              >
+                <div className="th-content">
+                  <span>Source</span>
+                  {renderSortIndicator('source')}
+                </div>
+              </th>
+              <th
+                className="sortable-header"
+                onClick={() => onSortChange('status')}
+                title="Sort by Status"
+              >
+                <div className="th-content">
+                  <span>Status</span>
+                  {renderSortIndicator('status')}
+                </div>
+              </th>
+              <th
+                className="sortable-header"
+                onClick={() => onSortChange('createdAt')}
+                title="Sort by Creation Date"
+              >
+                <div className="th-content">
+                  <span>Created Date</span>
+                  {renderSortIndicator('createdAt')}
+                </div>
+              </th>
               <th className="text-right">Actions</th>
             </tr>
           </thead>
@@ -138,6 +204,67 @@ const LeadTable = ({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {pagination && (
+        <div className="pagination-footer">
+          <div className="pagination-size-selector">
+            <label htmlFor="limit-select">Rows per page:</label>
+            <select
+              id="limit-select"
+              value={pagination.limit}
+              onChange={(e) => onLimitChange(Number(e.target.value))}
+              className="pagination-select"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
+
+          <div className="pagination-info">
+            Showing{' '}
+            <strong>
+              {pagination.total === 0
+                ? 0
+                : (pagination.page - 1) * pagination.limit + 1}
+            </strong>{' '}
+            to{' '}
+            <strong>
+              {Math.min(pagination.page * pagination.limit, pagination.total)}
+            </strong>{' '}
+            of <strong>{pagination.total}</strong> leads
+          </div>
+
+          <div className="pagination-controls">
+            <button
+              type="button"
+              className="pagination-btn"
+              disabled={!pagination.hasPrevPage}
+              onClick={() => onPageChange(pagination.page - 1)}
+              title="Previous Page"
+            >
+              <ChevronLeft size={16} />
+              <span>Prev</span>
+            </button>
+
+            <span className="pagination-current-page">
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+
+            <button
+              type="button"
+              className="pagination-btn"
+              disabled={!pagination.hasNextPage}
+              onClick={() => onPageChange(pagination.page + 1)}
+              title="Next Page"
+            >
+              <span>Next</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

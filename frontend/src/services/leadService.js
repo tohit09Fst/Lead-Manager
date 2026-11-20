@@ -1,29 +1,55 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-/**
- * Fetch all leads with optional search and status filtering
- */
-export const getLeads = async (search = '', status = '') => {
-  const params = new URLSearchParams();
-  if (search.trim()) params.append('search', search.trim());
-  if (status && status !== 'All') params.append('status', status);
-
-  const url = `${API_BASE_URL}/leads${params.toString() ? `?${params.toString()}` : ''}`;
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to fetch leads');
-  }
-
-  return data.data;
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('lead_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
 };
 
 /**
- * Fetch a single lead by ID
+ * Fetch all leads with search, status filtering, sorting and pagination
+ */
+export const getLeads = async ({
+  search = '',
+  status = '',
+  page = 1,
+  limit = 10,
+  sortBy = 'createdAt',
+  sortOrder = 'desc'
+} = {}) => {
+  const params = new URLSearchParams();
+  if (search.trim()) params.append('search', search.trim());
+  if (status && status !== 'All') params.append('status', status);
+  if (page) params.append('page', page);
+  if (limit) params.append('limit', limit);
+  if (sortBy) params.append('sortBy', sortBy);
+  if (sortOrder) params.append('sortOrder', sortOrder);
+
+  const url = `${API_BASE_URL}/leads?${params.toString()}`;
+  const response = await fetch(url, {
+    headers: getAuthHeaders()
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const error = new Error(data.message || 'Failed to fetch leads');
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+};
+
+/**
+ * Fetch single lead by ID
  */
 export const getLeadById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/leads/${id}`);
+  const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+    headers: getAuthHeaders()
+  });
   const data = await response.json();
 
   if (!response.ok) {
@@ -39,9 +65,7 @@ export const getLeadById = async (id) => {
 export const createLead = async (leadData) => {
   const response = await fetch(`${API_BASE_URL}/leads`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(leadData)
   });
 
@@ -62,9 +86,7 @@ export const createLead = async (leadData) => {
 export const updateLead = async (id, leadData) => {
   const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(leadData)
   });
 
@@ -84,7 +106,8 @@ export const updateLead = async (id, leadData) => {
  */
 export const deleteLead = async (id) => {
   const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getAuthHeaders()
   });
 
   const data = await response.json();

@@ -59,34 +59,85 @@ const validateLeadInput = (data, isUpdate = false) => {
   };
 };
 
-// @desc    Get all leads with search and filter support
+// @desc    Get all leads with search, filter, sorting & pagination for the authenticated user
 // @route   GET /api/leads
 export const getLeads = async (req, res, next) => {
   try {
-    const { search, status } = req.query;
-    const query = {};
+    const {
+      search,
+      status,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
 
-    // Filter by status if provided and not "All"
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, parseInt(limit, 10) || 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build query scoped strictly to authenticated user
+    const query = { user: req.user._id };
+
     if (status && status !== 'All' && status.trim() !== '') {
       query.status = status.trim();
     }
 
-    // Search by name (case-insensitive substring) or email
     if (search && search.trim() !== '') {
-      const sanitizedSearch = search.trim();
+      const sanitized = search.trim();
       query.$or = [
-        { name: { $regex: sanitizedSearch, $options: 'i' } },
-        { email: { $regex: sanitizedSearch, $options: 'i' } },
-        { company: { $regex: sanitizedSearch, $options: 'i' } }
+        { name: { $regex: sanitized, $options: 'i' } },
+        { email: { $regex: sanitized, $options: 'i' } },
+        { company: { $regex: sanitized, $options: 'i' } }
       ];
     }
 
-    const leads = await Lead.find(query).sort({ createdAt: -1 });
+    // Supported sort fields
+    const validSortFields = ['name', 'company', 'status', 'createdAt', 'source'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+
+    // Fetch leads and total count in parallel
+    const [leads, totalMatching, totalUserLeads, statusCounts] = await Promise.all([
+      Lead.find(query)
+        .sort({ [sortField]: sortDirection })
+        .skip(skip)
+        .limit(limitNum),
+      Lead.countDocuments(query),
+      Lead.countDocuments({ user: req.user._id }),
+      Lead.aggregate([
+        { $match: { user: req.user._id } },
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ])
+    ]);
+
+    // Format metrics dictionary
+    const metrics = {
+      total: totalUserLeads,
+      new: 0,
+      contacted: 0,
+      qualified: 0,
+      lost: 0
+    };
+    statusCounts.forEach((s) => {
+      const key = s._id?.toLowerCase();
+      if (metrics[key] !== undefined) metrics[key] = s.count;
+    });
+
+    const totalPages = Math.ceil(totalMatching / limitNum) || 1;
 
     res.status(200).json({
       success: true,
-      count: leads.length,
-      data: leads
+      data: leads,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalMatching,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      },
+      metrics
     });
   } catch (error) {
     next(error);
@@ -106,11 +157,11 @@ export const getLeadById = async (req, res, next) => {
       });
     }
 
-    const lead = await Lead.findById(id);
+    const lead = await Lead.findOne({ _id: id, user: req.user._id });
     if (!lead) {
       return res.status(404).json({
         success: false,
-        message: 'Lead not found'
+        message: 'Lead not found or unauthorized'
       });
     }
 
@@ -123,7 +174,7 @@ export const getLeadById = async (req, res, next) => {
   }
 };
 
-// @desc    Create a new lead
+// @desc    Create a new lead for authenticated user
 // @route   POST /api/leads
 export const createLead = async (req, res, next) => {
   try {
@@ -139,6 +190,7 @@ export const createLead = async (req, res, next) => {
     const { name, email, phone, company, source, status } = req.body;
 
     const lead = await Lead.create({
+      user: req.user._id,
       name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
@@ -179,11 +231,11 @@ export const updateLead = async (req, res, next) => {
       });
     }
 
-    const lead = await Lead.findById(id);
+    const lead = await Lead.findOne({ _id: id, user: req.user._id });
     if (!lead) {
       return res.status(404).json({
         success: false,
-        message: 'Lead not found'
+        message: 'Lead not found or unauthorized'
       });
     }
 
@@ -224,11 +276,11 @@ export const deleteLead = async (req, res, next) => {
       });
     }
 
-    const lead = await Lead.findByIdAndDelete(id);
+    const lead = await Lead.findOneAndDelete({ _id: id, user: req.user._id });
     if (!lead) {
       return res.status(404).json({
         success: false,
-        message: 'Lead not found'
+        message: 'Lead not found or unauthorized'
       });
     }
 

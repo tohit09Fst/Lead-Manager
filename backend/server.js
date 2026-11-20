@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './src/config/db.js';
 import leadRoutes from './src/routes/leadRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
+import User from './src/models/User.js';
+import Lead from './src/models/Lead.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 
 dotenv.config();
@@ -29,17 +32,28 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
+// Mount Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
 
-// Auto-seed sample leads if collection is empty
-import Lead from './src/models/Lead.js';
+// Auto-seed demo user & initial leads if empty
 const autoSeedIfEmpty = async () => {
   try {
-    const count = await Lead.countDocuments();
-    if (count === 0) {
+    let demoUser = await User.findOne({ email: 'demo@merutechno.com' });
+    if (!demoUser) {
+      demoUser = await User.create({
+        name: 'Demo Sales Rep',
+        email: 'demo@merutechno.com',
+        password: 'password123'
+      });
+      console.log('[Seed] Default demo user created: demo@merutechno.com / password123');
+    }
+
+    const leadCount = await Lead.countDocuments({ user: demoUser._id });
+    if (leadCount === 0) {
       await Lead.insertMany([
         {
+          user: demoUser._id,
           name: 'Sarah Connor',
           email: 'sarah.connor@cyberdyne.com',
           phone: '+1 555-019-2834',
@@ -48,6 +62,7 @@ const autoSeedIfEmpty = async () => {
           status: 'New'
         },
         {
+          user: demoUser._id,
           name: 'Michael Scott',
           email: 'm.scott@dundermifflin.com',
           phone: '+1 555-014-9988',
@@ -56,6 +71,7 @@ const autoSeedIfEmpty = async () => {
           status: 'Contacted'
         },
         {
+          user: demoUser._id,
           name: 'Elena Rostova',
           email: 'elena@novatech.io',
           phone: '+44 20 7946 0912',
@@ -64,6 +80,7 @@ const autoSeedIfEmpty = async () => {
           status: 'Qualified'
         },
         {
+          user: demoUser._id,
           name: 'David Kim',
           email: 'dkim@apexlogistics.com',
           phone: '+1 555-017-4321',
@@ -72,18 +89,37 @@ const autoSeedIfEmpty = async () => {
           status: 'Lost'
         },
         {
+          user: demoUser._id,
           name: 'Amina Al-Mansoor',
           email: 'amina@solarenergypartners.ae',
           phone: '+971 4 391 1111',
           company: 'Solar Energy Partners',
           source: 'Website',
           status: 'Qualified'
+        },
+        {
+          user: demoUser._id,
+          name: 'Marcus Brody',
+          email: 'marcus@museumarch.edu',
+          phone: '+1 555-018-7711',
+          company: 'National Heritage Foundation',
+          source: 'Website',
+          status: 'New'
+        },
+        {
+          user: demoUser._id,
+          name: 'Chloe Decker',
+          email: 'cdecker@lapd-consult.gov',
+          phone: '+1 555-013-4422',
+          company: 'Decker & Partners',
+          source: 'Referral',
+          status: 'Contacted'
         }
       ]);
-      console.log('[Seed] Database initialized with 5 sample leads.');
+      console.log('[Seed] Database initialized with 7 sample leads for demo user.');
     }
   } catch (seedErr) {
-    console.warn('[Seed] Note: Could not auto-seed initial data:', seedErr.message);
+    console.warn('[Seed] Note: Could not auto-seed demo data:', seedErr.message);
   }
 };
 await autoSeedIfEmpty();
